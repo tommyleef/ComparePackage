@@ -15,6 +15,7 @@ using System.Data;
 using System.Management;
 using System.Net.NetworkInformation;
 using System.DirectoryServices;
+using System.IO;
 
 namespace VitrualPackageCompare
 {
@@ -42,6 +43,7 @@ namespace VitrualPackageCompare
 			string str_ouname = "CUTE-WKS";
 			string str_site = tbsite.Text;
 			string str_entry = string.Format(@"LDAP://OU={0},DC={1},DC=LOCAL",str_ouname,str_site);
+			List<string> wkslist = new List<string>();
 		    DirectoryEntry entry = new DirectoryEntry( str_entry );    
 		    DirectorySearcher mySearcher = new DirectorySearcher(entry);
 
@@ -55,12 +57,14 @@ namespace VitrualPackageCompare
 
 		        if (ComputerName.Contains("CK") || ComputerName.Contains("GT") || ComputerName.Contains("BS") || ComputerName.Contains("BO") || ComputerName.Contains("XSR"))
 		        {
-		        	cbstandard.Items.Add(ComputerName);
+		        	wkslist.Add(ComputerName);
 		        }
 		    }
     		
-    		cbstandard.SelectedIndex = 6;
-		
+    		wkslist.Sort();
+    		cbstandard.Items.AddRange( wkslist.ToArray() );
+    		cbstandard.SelectedIndex = 0;
+    		
 		    mySearcher.Dispose();
 		    entry.Dispose();
 		}
@@ -104,12 +108,13 @@ namespace VitrualPackageCompare
 	            }
 				
 				dgvpkgname.DataSource = dtpkglist;
-				dgvpkgname.Columns[0].Width = 297;
+				dgvpkgname.Columns[0].Width = 445;
 				//dgvpkgname.Columns[0].
 			}
 			catch( Exception ex )
 			{
 				toolStripStatusLabel1.Text = "Catch error:"+ex.Message;
+				return;
 			}
 		}
 		
@@ -159,15 +164,21 @@ namespace VitrualPackageCompare
 			List<string> standardnames = new List<string>();
 			List<string> packagenames = new List<string>();
 			List<string> comparenames = new List<string>();
+			List<string> erroriws = new List<string>();			
 			
 			dgvresult.DataSource = null;
 			dgvresult.Rows.Clear();
 			if( !dgvresult.Columns.Contains( "iws" ) )
 				dgvresult.Columns.Add( "iws" , "IWS Name");
+			if( !dgvresult.Columns.Contains( "Action" ) )
+			{
+				dgvresult.Columns.Add( "action" , "Act");
+				dgvresult.Columns[ "action" ].Width = 30;
+			}
 			if( !dgvresult.Columns.Contains( "pkgname" ) )
 			{
 				dgvresult.Columns.Add( "pkgname" , "Package Name" );
-				dgvresult.Columns[ "pkgname" ].Width = 340;
+				dgvresult.Columns[ "pkgname" ].Width = 400;
 			}
 			
 			btlist.PerformClick();
@@ -180,7 +191,7 @@ namespace VitrualPackageCompare
 				if( !string.Equals("online", MainForm.PingHost(compareiws), StringComparison.OrdinalIgnoreCase) )
 				{
 					toolStripStatusLabel1.Text = string.Format(@"{0} is not Online.",compareiws);
-					this.dgvresult.Rows.Add(compareiws,"Not Online");
+					this.dgvresult.Rows.Add(compareiws, "N", "Not Online");
 					continue;
 				}
 				
@@ -196,6 +207,15 @@ namespace VitrualPackageCompare
 		            {
 						packagenames.Add( vspObject.GetPropertyValue("Name").ToString() );
 		            }
+				}
+				catch( Exception ex )
+				{
+					toolStripStatusLabel1.Text = "Catch error1:"+ex.Message;
+					erroriws.Add(compareiws +","+ ex.Message);
+					continue;
+				}
+				try
+				{
 					if( standardnames.Count == 0 )
 					{
 						ManagementClass standClass = new ManagementClass( string.Format(@"\\{0}\root\default:VirtualSoftwarePackage",standardiws) );
@@ -209,7 +229,8 @@ namespace VitrualPackageCompare
 				}
 				catch( Exception ex )
 				{
-					toolStripStatusLabel1.Text = "Catch error:"+ex.Message;
+					toolStripStatusLabel1.Text = "Catch error1:"+ex.Message;
+					erroriws.Add(compareiws +","+ ex.Message); //Generic failure stop at tsa1ckb109 show last one is tsa1ckb108
 				}
 				
 				try // compare with standard list in datagridview
@@ -225,15 +246,21 @@ namespace VitrualPackageCompare
 				catch( Exception ex )
 				{
 					toolStripStatusLabel1.Text = "Catch error2:"+ex.Message;
+					return;
 				}
 				
 				try
 				{
+					if( comparenames.Count == 0 && packagenames.Count == 0 )
+					{
+						this.dgvresult.Rows.Add( compareiws , "S", "package list is the same with "+standardiws );
+						continue;
+					}
 					if( comparenames.Count != 0 )
 					{
 						foreach( string pkgname in comparenames )
 						{
-							this.dgvresult.Rows.Add( compareiws+"+" , pkgname );
+							this.dgvresult.Rows.Add( compareiws, "+", pkgname );
 						}
 						comparenames.Clear();
 					}
@@ -241,16 +268,79 @@ namespace VitrualPackageCompare
 					{
 						foreach( string pkgname in packagenames )
 						{
-							this.dgvresult.Rows.Add( compareiws+"-" , pkgname );
+							this.dgvresult.Rows.Add( compareiws, "-", pkgname );
 						}
 						packagenames.Clear();
+					}
+					if( erroriws.Count != 0 )
+					{
+						foreach( string iws in erroriws )
+						{
+							this.dgvresult.Rows.Add( iws.Split(',')[0] , "E", iws.Split(',')[1] );
+						}
+						erroriws.Clear();
 					}
 				}
 				catch( Exception ex )
 				{
 					toolStripStatusLabel1.Text = "Catch error3:"+ex.Message;
+					return;
 				}
+
 			}
+		}
+		
+		void BtexportClick(object sender, EventArgs e)
+		{
+			string strfolder = @"C:\tools\";
+			if(!Directory.Exists(strfolder))
+			   Directory.CreateDirectory(strfolder);
+			string strToday = string.Format( "{0:yyyyMMdd}" , DateTime.Today );
+			string CsvFpath = strfolder+strToday+"_layercompare.csv";
+		    try
+		    {
+		        System.IO.StreamWriter csvFileWriter = new StreamWriter(CsvFpath, false);
+		
+		        string columnHeaderText = "";
+		
+		        int countColumn = dgvresult.ColumnCount - 1;
+
+		        if (countColumn >= 0)
+		        {
+		            columnHeaderText = dgvresult.Columns[0].HeaderText;
+		        }
+		
+		        for (int i = 1; i <= countColumn; i++)
+		        {
+		            columnHeaderText = columnHeaderText + ',' + dgvresult.Columns[i].HeaderText;
+		        }
+		
+		
+		        csvFileWriter.WriteLine(columnHeaderText);
+		
+		        foreach (DataGridViewRow dataRowObject in dgvresult.Rows)
+		        {
+		            if (!dataRowObject.IsNewRow)
+		            {
+		                string dataFromGrid = "";
+		
+		                dataFromGrid = dataRowObject.Cells[0].Value.ToString();
+		
+		                for (int i = 1; i <= countColumn; i++)
+		                {
+		                    dataFromGrid = dataFromGrid + ',' + dataRowObject.Cells[i].Value.ToString();
+		                }
+		                csvFileWriter.WriteLine(dataFromGrid);
+		            }
+		        }
+		        
+		        csvFileWriter.Close();
+		        
+		    }
+		    catch (Exception exceptionObject)
+		    {
+		        toolStripStatusLabel1.Text = exceptionObject.ToString();
+		    }
 		}
 	}
 }

@@ -38,6 +38,7 @@ namespace VitrualPackageCompare
 		{
 			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
 			System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.label1 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label3 = new System.Windows.Forms.Label();
@@ -51,6 +52,7 @@ namespace VitrualPackageCompare
 			this.dgvresult = new System.Windows.Forms.DataGridView();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+			this.btexport = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.dgvpkgname)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.dgvresult)).BeginInit();
 			this.statusStrip1.SuspendLayout();
@@ -135,9 +137,9 @@ namespace VitrualPackageCompare
 			this.btcompare.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.btcompare.Location = new System.Drawing.Point(210, 47);
 			this.btcompare.Name = "btcompare";
-			this.btcompare.Size = new System.Drawing.Size(98, 26);
+			this.btcompare.Size = new System.Drawing.Size(120, 26);
 			this.btcompare.TabIndex = 8;
-			this.btcompare.Text = "Compare";
+			this.btcompare.Text = "Compare All";
 			this.btcompare.UseVisualStyleBackColor = true;
 			this.btcompare.Click += new System.EventHandler(this.BtcompareClick);
 			// 
@@ -148,6 +150,7 @@ namespace VitrualPackageCompare
 			this.cbstandard.Location = new System.Drawing.Point(336, 11);
 			this.cbstandard.Name = "cbstandard";
 			this.cbstandard.Size = new System.Drawing.Size(140, 28);
+			this.cbstandard.Sorted = true;
 			this.cbstandard.TabIndex = 9;
 			// 
 			// dgvpkgname
@@ -172,10 +175,10 @@ namespace VitrualPackageCompare
 			dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
 			dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
 			this.dgvpkgname.DefaultCellStyle = dataGridViewCellStyle2;
-			this.dgvpkgname.Location = new System.Drawing.Point(683, 11);
+			this.dgvpkgname.Location = new System.Drawing.Point(604, 11);
 			this.dgvpkgname.Name = "dgvpkgname";
 			this.dgvpkgname.RowHeadersVisible = false;
-			this.dgvpkgname.Size = new System.Drawing.Size(389, 580);
+			this.dgvpkgname.Size = new System.Drawing.Size(468, 580);
 			this.dgvpkgname.TabIndex = 10;
 			// 
 			// dgvresult
@@ -186,7 +189,8 @@ namespace VitrualPackageCompare
 			this.dgvresult.Location = new System.Drawing.Point(12, 79);
 			this.dgvresult.Name = "dgvresult";
 			this.dgvresult.RowHeadersVisible = false;
-			this.dgvresult.Size = new System.Drawing.Size(651, 512);
+			this.dgvresult.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			this.dgvresult.Size = new System.Drawing.Size(577, 512);
 			this.dgvresult.TabIndex = 11;
 			// 
 			// statusStrip1
@@ -204,11 +208,23 @@ namespace VitrualPackageCompare
 			this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
 			this.toolStripStatusLabel1.Size = new System.Drawing.Size(0, 17);
 			// 
+			// btexport
+			// 
+			this.btexport.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btexport.Location = new System.Drawing.Point(462, 47);
+			this.btexport.Name = "btexport";
+			this.btexport.Size = new System.Drawing.Size(120, 26);
+			this.btexport.TabIndex = 13;
+			this.btexport.Text = "ExportCSV";
+			this.btexport.UseVisualStyleBackColor = true;
+			this.btexport.Click += new System.EventHandler(this.BtexportClick);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1084, 616);
+			this.Controls.Add(this.btexport);
 			this.Controls.Add(this.statusStrip1);
 			this.Controls.Add(this.dgvresult);
 			this.Controls.Add(this.dgvpkgname);
@@ -221,6 +237,7 @@ namespace VitrualPackageCompare
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.label1);
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "MainForm";
 			this.Text = "VirtualPackageCompare";
 			this.Load += new System.EventHandler(this.MainFormLoad);
@@ -231,6 +248,7 @@ namespace VitrualPackageCompare
 			this.ResumeLayout(false);
 			this.PerformLayout();
 		}
+		private System.Windows.Forms.Button btexport;
 		private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
 		private System.Windows.Forms.StatusStrip statusStrip1;
 		private System.Windows.Forms.DataGridView dgvresult;
